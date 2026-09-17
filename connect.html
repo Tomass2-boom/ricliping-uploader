@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connect &mdash; Ricliping Uploader</title>
+<style>
+:root{--bg:#ffffff;--fg:#15171a;--muted:#5b6169;--line:#e3e6ea;--accent:#1f6feb;--ok:#1a7f37;--card:#f6f8fa}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1014;--fg:#e8eaed;--muted:#9aa2ad;--line:#242a31;--accent:#6ea8ff;--ok:#3fb950;--card:#161b22}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:640px;margin:0 auto;padding:56px 16px 72px}
+h1{font-size:1.8rem;margin:0 0 .25rem;letter-spacing:-.02em}
+.tag{color:var(--muted);margin:0 0 2rem}
+h2{font-size:1.05rem;margin:2rem 0 .6rem}
+p{margin:0 0 1rem}
+ul{margin:0 0 1rem;padding-left:1.25rem}
+li{margin-bottom:.35rem}
+a{color:var(--accent)}
+button{font:inherit}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:13px 22px;font-weight:600;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:default}
+.card{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:18px 20px;margin:1.5rem 0}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.86rem;word-break:break-all;display:block;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px;margin:.4rem 0 1rem}
+.err{color:#cf222e}
+.ok{color:var(--ok);font-weight:600}
+footer{margin-top:3.5rem;padding-top:1.25rem;border-top:1px solid var(--line);color:var(--muted);font-size:.9rem}
+footer a{margin-right:1rem}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Connect your TikTok account</h1>
+<p class="tag">This gives Ricliping Uploader permission to place drafts in your TikTok inbox.</p>
+
+<div id="start">
+<div class="card">
+<p style="margin-top:0"><strong>You are about to grant two permissions:</strong></p>
+<ul>
+<li><strong>user.info.basic</strong> &mdash; so the tool can confirm which account it is connected to.</li>
+<li><strong>video.upload</strong> &mdash; so the tool can place a video in your inbox as a draft.</li>
+</ul>
+<p style="margin-bottom:0">It cannot publish anything. Every draft is reviewed and posted by you inside the TikTok app.</p>
+</div>
+<button class="btn" id="go">Continue with TikTok</button>
+<p style="margin-top:1.5rem;color:var(--muted);font-size:.92rem">You will be taken to TikTok's own login screen. This site never sees your password.</p>
+</div>
+
+<div id="done" class="hide">
+<p class="ok">Authorisation complete.</p>
+<p>Copy both values below into the Ricliping Uploader app on your computer to finish signing in. They are valid for a few minutes and are not stored or sent anywhere by this page.</p>
+<h2>Authorisation code</h2>
+<code id="code"></code>
+<h2>Code verifier</h2>
+<code id="verifier"></code>
+<p style="color:var(--muted);font-size:.92rem">Once the app has these, close this page.</p>
+</div>
+
+<div id="failed" class="hide">
+<p class="err" id="errmsg"></p>
+<p><a href="./connect.html">Try again</a></p>
+</div>
+
+<footer>
+<a href="./index.html">Home</a>
+<a href="./terms.html">Terms of Service</a>
+<a href="./privacy.html">Privacy Policy</a>
+</footer>
+</div>
+
+<script>
+var CLIENT_KEY = "awrdh85rdpposjj5";
+var REDIRECT   = "https://tomass2-boom.github.io/ricliping-uploader/connect.html";
+var SCOPES     = "user.info.basic,video.upload";
+
+function rand(n){
+  var a = new Uint8Array(n);
+  crypto.getRandomValues(a);
+  var s = "";
+  var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  for (var i = 0; i < a.length; i++) s += chars[a[i] % chars.length];
+  return s;
+}
+function b64url(buf){
+  var bytes = new Uint8Array(buf), s = "";
+  for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+async function challenge(v){
+  var d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v));
+  return b64url(d);
+}
+function show(id){ document.getElementById(id).classList.remove("hide"); }
+function hide(id){ document.getElementById(id).classList.add("hide"); }
+
+var params = new URLSearchParams(location.search);
+
+if (params.get("error")) {
+  hide("start"); show("failed");
+  document.getElementById("errmsg").textContent =
+    "TikTok returned an error: " + params.get("error") +
+    (params.get("error_description") ? " — " + params.get("error_description") : "");
+} else if (params.get("code")) {
+  var expected = sessionStorage.getItem("ru_state");
+  var verifier = sessionStorage.getItem("ru_verifier");
+  if (!expected || params.get("state") !== expected) {
+    hide("start"); show("failed");
+    document.getElementById("errmsg").textContent =
+      "This response did not match the request that started in this browser. For your safety it was rejected.";
+  } else {
+    hide("start"); show("done");
+    document.getElementById("code").textContent = params.get("code");
+    document.getElementById("verifier").textContent = verifier || "(missing)";
+    sessionStorage.removeItem("ru_state");
+    sessionStorage.removeItem("ru_verifier");
+  }
+} else {
+  document.getElementById("go").addEventListener("click", async function(){
+    this.disabled = true;
+    this.textContent = "Redirecting to TikTok...";
+    var state = rand(24);
+    var verifier = rand(64);
+    sessionStorage.setItem("ru_state", state);
+    sessionStorage.setItem("ru_verifier", verifier);
+    var c = await challenge(verifier);
+    var url = "https://www.tiktok.com/v2/auth/authorize/"
+      + "?client_key=" + encodeURIComponent(CLIENT_KEY)
+      + "&scope=" + encodeURIComponent(SCOPES)
+      + "&response_type=code"
+      + "&redirect_uri=" + encodeURIComponent(REDIRECT)
+      + "&state=" + encodeURIComponent(state)
+      + "&code_challenge=" + encodeURIComponent(c)
+      + "&code_challenge_method=S256";
+    location.href = url;
+  });
+}
+</script>
+</body>
+</html>
