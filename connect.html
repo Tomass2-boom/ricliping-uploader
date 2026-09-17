@@ -24,6 +24,7 @@ button{font:inherit}
 code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.86rem;word-break:break-all;display:block;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px;margin:.4rem 0 1rem}
 .err{color:#cf222e}
 .ok{color:var(--ok);font-weight:600}
+.note{color:var(--muted);font-size:.85rem}
 footer{margin-top:3.5rem;padding-top:1.25rem;border-top:1px solid var(--line);color:var(--muted);font-size:.9rem}
 footer a{margin-right:1rem}
 .hide{display:none}
@@ -45,6 +46,7 @@ footer a{margin-right:1rem}
 </div>
 <button class="btn" id="go">Continue with TikTok</button>
 <p style="margin-top:1.5rem;color:var(--muted);font-size:.92rem">You will be taken to TikTok's own login screen. This site never sees your password.</p>
+<p class="note" id="keynote"></p>
 </div>
 
 <div id="done" class="hide">
@@ -70,9 +72,16 @@ footer a{margin-right:1rem}
 </div>
 
 <script>
-var CLIENT_KEY = "awrdh85rdpposjj5";
-var REDIRECT   = "https://tomass2-boom.github.io/ricliping-uploader/connect.html";
-var SCOPES     = "user.info.basic,video.upload";
+var PRODUCTION_KEY = "awrdh85rdpposjj5";
+var REDIRECT = "https://tomass2-boom.github.io/ricliping-uploader/connect.html";
+var SCOPES   = "user.info.basic,video.upload";
+
+var params = new URLSearchParams(location.search);
+
+// Sandbox testing uses a different client key. Pass it as ?k=<sandbox key>.
+// The redirect_uri sent to TikTok stays the bare URL above, which is what is
+// registered, so the query string here does not affect the match.
+var CLIENT_KEY = params.get("k") || PRODUCTION_KEY;
 
 function rand(n){
   var a = new Uint8Array(n);
@@ -94,8 +103,6 @@ async function challenge(v){
 function show(id){ document.getElementById(id).classList.remove("hide"); }
 function hide(id){ document.getElementById(id).classList.add("hide"); }
 
-var params = new URLSearchParams(location.search);
-
 if (params.get("error")) {
   hide("start"); show("failed");
   document.getElementById("errmsg").textContent =
@@ -116,6 +123,10 @@ if (params.get("error")) {
     sessionStorage.removeItem("ru_verifier");
   }
 } else {
+  if (CLIENT_KEY !== PRODUCTION_KEY) {
+    document.getElementById("keynote").textContent =
+      "Using client key " + CLIENT_KEY + " (sandbox).";
+  }
   document.getElementById("go").addEventListener("click", async function(){
     this.disabled = true;
     this.textContent = "Redirecting to TikTok...";
@@ -124,7 +135,7 @@ if (params.get("error")) {
     sessionStorage.setItem("ru_state", state);
     sessionStorage.setItem("ru_verifier", verifier);
     var c = await challenge(verifier);
-    var url = "https://www.tiktok.com/v2/auth/authorize/"
+    location.href = "https://www.tiktok.com/v2/auth/authorize/"
       + "?client_key=" + encodeURIComponent(CLIENT_KEY)
       + "&scope=" + encodeURIComponent(SCOPES)
       + "&response_type=code"
@@ -132,7 +143,6 @@ if (params.get("error")) {
       + "&state=" + encodeURIComponent(state)
       + "&code_challenge=" + encodeURIComponent(c)
       + "&code_challenge_method=S256";
-    location.href = url;
   });
 }
 </script>
