@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Connect &mdash; Ricliping Uploader</title>
+<title>Connect — Ricliping Uploader</title>
 <style>
-:root{--bg:#ffffff;--fg:#15171a;--muted:#5b6169;--line:#e3e6ea;--accent:#1f6feb;--ok:#1a7f37;--card:#f6f8fa}
-@media (prefers-color-scheme:dark){:root{--bg:#0e1014;--fg:#e8eaed;--muted:#9aa2ad;--line:#242a31;--accent:#6ea8ff;--ok:#3fb950;--card:#161b22}}
+:root{--bg:#ffffff;--fg:#15171a;--muted:#5b6169;--line:#e3e6ea;--accent:#1f6feb;--card:#f6f8fa;--bad:#cf222e}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1014;--fg:#e8eaed;--muted:#9aa2ad;--line:#242a31;--accent:#6ea8ff;--card:#161b22;--bad:#f85149}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 .wrap{max-width:640px;margin:0 auto;padding:56px 16px 72px}
@@ -14,54 +14,63 @@ h1{font-size:1.8rem;margin:0 0 .25rem;letter-spacing:-.02em}
 .tag{color:var(--muted);margin:0 0 2rem}
 h2{font-size:1.05rem;margin:2rem 0 .6rem}
 p{margin:0 0 1rem}
+a{color:var(--accent)}
 ul{margin:0 0 1rem;padding-left:1.25rem}
 li{margin-bottom:.35rem}
-a{color:var(--accent)}
-button{font:inherit}
-.btn{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:13px 22px;font-weight:600;cursor:pointer}
-.btn:disabled{opacity:.5;cursor:default}
-.card{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:18px 20px;margin:1.5rem 0}
-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.86rem;word-break:break-all;display:block;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px;margin:.4rem 0 1rem}
-.err{color:#cf222e}
-.ok{color:var(--ok);font-weight:600}
-.note{color:var(--muted);font-size:.85rem}
+.box{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:16px 20px;margin:1.4rem 0}
+.btn{display:inline-block;background:var(--accent);color:#fff;border:0;border-radius:8px;padding:13px 24px;font:inherit;font-weight:600;cursor:pointer;text-decoration:none;margin-top:.6rem}
+.btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line);padding:9px 16px;font-size:.9rem;margin-top:.4rem}
+label{display:block;font-weight:600;margin:1.1rem 0 .3rem;font-size:.95rem}
+textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);font:inherit;font-size:.88rem;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;min-height:70px;resize:vertical;word-break:break-all}
+.key{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88rem}
+.muted{color:var(--muted);font-size:.92rem}
+.bad{color:var(--bad)}
 footer{margin-top:3.5rem;padding-top:1.25rem;border-top:1px solid var(--line);color:var(--muted);font-size:.9rem}
 footer a{margin-right:1rem}
-.hide{display:none}
 </style>
 </head>
 <body>
 <div class="wrap">
-<h1>Connect your TikTok account</h1>
-<p class="tag">This gives Ricliping Uploader permission to place drafts in your TikTok inbox.</p>
 
-<div id="start">
-<div class="card">
-<p style="margin-top:0"><strong>You are about to grant two permissions:</strong></p>
-<ul>
-<li><strong>user.info.basic</strong> &mdash; so the tool can confirm which account it is connected to.</li>
-<li><strong>video.upload</strong> &mdash; so the tool can place a video in your inbox as a draft.</li>
-</ul>
-<p style="margin-bottom:0">It cannot publish anything. Every draft is reviewed and posted by you inside the TikTok app.</p>
-</div>
-<button class="btn" id="go">Continue with TikTok</button>
-<p style="margin-top:1.5rem;color:var(--muted);font-size:.92rem">You will be taken to TikTok's own login screen. This site never sees your password.</p>
-<p class="note" id="keynote"></p>
-</div>
+<h1>Connect to TikTok</h1>
+<p class="tag">This page starts the sign-in for Ricliping Uploader and hands the result back to the app on your computer.</p>
 
-<div id="done" class="hide">
-<p class="ok">Authorisation complete.</p>
-<p>Copy both values below into the Ricliping Uploader app on your computer to finish signing in. They are valid for a few minutes and are not stored or sent anywhere by this page.</p>
-<h2>Authorisation code</h2>
-<code id="code"></code>
-<h2>Code verifier</h2>
-<code id="verifier"></code>
-<p style="color:var(--muted);font-size:.92rem">Once the app has these, close this page.</p>
+<div id="step1">
+  <div class="box">
+    <p style="margin:0">Using client key <span class="key" id="keyshow"></span> <span id="keymode"></span></p>
+  </div>
+
+  <h2>Permissions this will grant</h2>
+  <ul>
+    <li><strong>user.info.basic</strong> — confirm which account you signed in with.</li>
+    <li><strong>video.publish</strong> — read which posting options your account allows, and publish a video you have reviewed and chosen to post.</li>
+    <li><strong>video.upload</strong> — place a video in your drafts instead, when you choose that.</li>
+  </ul>
+  <p class="muted">Nothing is posted by signing in. Every post is reviewed and confirmed on the posting screen inside the app.</p>
+
+  <a href="#" class="btn" id="go">Continue with TikTok</a>
+  <p class="muted" style="margin-top:1rem">Keep this tab open until you have copied both values into the app.</p>
 </div>
 
-<div id="failed" class="hide">
-<p class="err" id="errmsg"></p>
-<p><a href="./connect.html">Try again</a></p>
+<div id="step2" style="display:none">
+  <h2>Signed in — copy these two values</h2>
+  <p>Paste both into the Ricliping Uploader window on your computer to finish connecting. They are valid for a few minutes and are not stored or sent anywhere by this page.</p>
+
+  <label for="code">Authorisation code</label>
+  <textarea id="code" readonly></textarea>
+  <button class="btn ghost" data-copy="code">Copy code</button>
+
+  <label for="verifier">Code verifier</label>
+  <textarea id="verifier" readonly></textarea>
+  <button class="btn ghost" data-copy="verifier">Copy verifier</button>
+
+  <p class="muted" style="margin-top:1.5rem">The authorisation code can only be used once. If the app reports an error, start again from <a href="./connect.html">the beginning of this page</a>.</p>
+</div>
+
+<div id="stepErr" style="display:none">
+  <h2>TikTok returned an error</h2>
+  <div class="box"><p style="margin:0" class="bad" id="errmsg"></p></div>
+  <p>Start again from <a href="./connect.html">the beginning of this page</a>.</p>
 </div>
 
 <footer>
@@ -72,79 +81,114 @@ footer a{margin-right:1rem}
 </div>
 
 <script>
-var PRODUCTION_KEY = "awrdh85rdpposjj5";
-var REDIRECT = "https://tomass2-boom.github.io/ricliping-uploader/connect.html";
-var SCOPES   = "user.info.basic,video.upload";
+(function () {
+  // The production client key is the default. ?k=<key> overrides it, which is
+  // how the sandbox credential set is used without editing this page. The key
+  // in use is printed above so a mismatch is caught before signing in rather
+  // than as a confusing token-exchange failure afterwards.
+  var PRODUCTION_KEY = 'awrdh85rdpposjj5';
+  var SANDBOX_PREFIX = 'sb';
 
-var params = new URLSearchParams(location.search);
+  var SCOPE = 'user.info.basic,video.publish,video.upload';
+  var REDIRECT = location.origin + location.pathname;
+  var AUTHORIZE = 'https://www.tiktok.com/v2/auth/authorize/';
 
-// Sandbox testing uses a different client key. Pass it as ?k=<sandbox key>.
-// The redirect_uri sent to TikTok stays the bare URL above, which is what is
-// registered, so the query string here does not affect the match.
-var CLIENT_KEY = params.get("k") || PRODUCTION_KEY;
+  var params = new URLSearchParams(location.search);
+  var key = (params.get('k') || PRODUCTION_KEY).trim();
 
-function rand(n){
-  var a = new Uint8Array(n);
-  crypto.getRandomValues(a);
-  var s = "";
-  var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  for (var i = 0; i < a.length; i++) s += chars[a[i] % chars.length];
-  return s;
-}
-function b64url(buf){
-  var bytes = new Uint8Array(buf), s = "";
-  for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
-  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-async function challenge(v){
-  var d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v));
-  return b64url(d);
-}
-function show(id){ document.getElementById(id).classList.remove("hide"); }
-function hide(id){ document.getElementById(id).classList.add("hide"); }
+  document.getElementById('keyshow').textContent = key;
+  document.getElementById('keymode').textContent =
+    key.indexOf(SANDBOX_PREFIX) === 0 ? '(sandbox)' : '(production)';
 
-if (params.get("error")) {
-  hide("start"); show("failed");
-  document.getElementById("errmsg").textContent =
-    "TikTok returned an error: " + params.get("error") +
-    (params.get("error_description") ? " — " + params.get("error_description") : "");
-} else if (params.get("code")) {
-  var expected = sessionStorage.getItem("ru_state");
-  var verifier = sessionStorage.getItem("ru_verifier");
-  if (!expected || params.get("state") !== expected) {
-    hide("start"); show("failed");
-    document.getElementById("errmsg").textContent =
-      "This response did not match the request that started in this browser. For your safety it was rejected.";
-  } else {
-    hide("start"); show("done");
-    document.getElementById("code").textContent = params.get("code");
-    document.getElementById("verifier").textContent = verifier || "(missing)";
-    sessionStorage.removeItem("ru_state");
-    sessionStorage.removeItem("ru_verifier");
+  function randomVerifier() {
+    // Unreserved characters only, 64 long — inside TikTok's 43..128 range.
+    var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+    var bytes = new Uint8Array(64);
+    crypto.getRandomValues(bytes);
+    var out = '';
+    for (var i = 0; i < bytes.length; i++) out += chars[bytes[i] % chars.length];
+    return out;
   }
-} else {
-  if (CLIENT_KEY !== PRODUCTION_KEY) {
-    document.getElementById("keynote").textContent =
-      "Using client key " + CLIENT_KEY + " (sandbox).";
+
+  function sha256Hex(text) {
+    // TikTok requires HEX encoding of the SHA256 digest, not base64url.
+    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))
+      .then(function (buf) {
+        return Array.from(new Uint8Array(buf)).map(function (b) {
+          return b.toString(16).padStart(2, '0');
+        }).join('');
+      });
   }
-  document.getElementById("go").addEventListener("click", async function(){
-    this.disabled = true;
-    this.textContent = "Redirecting to TikTok...";
-    var state = rand(24);
-    var verifier = rand(64);
-    sessionStorage.setItem("ru_state", state);
-    sessionStorage.setItem("ru_verifier", verifier);
-    var c = await challenge(verifier);
-    location.href = "https://www.tiktok.com/v2/auth/authorize/"
-      + "?client_key=" + encodeURIComponent(CLIENT_KEY)
-      + "&scope=" + encodeURIComponent(SCOPES)
-      + "&response_type=code"
-      + "&redirect_uri=" + encodeURIComponent(REDIRECT)
-      + "&state=" + encodeURIComponent(state)
-      + "&code_challenge=" + encodeURIComponent(c)
-      + "&code_challenge_method=S256";
+
+  var err = params.get('error');
+  var code = params.get('code');
+  var state = params.get('state');
+
+  if (err) {
+    document.getElementById('step1').style.display = 'none';
+    document.getElementById('stepErr').style.display = 'block';
+    document.getElementById('errmsg').textContent =
+      err + (params.get('error_description') ? ' — ' + params.get('error_description') : '');
+    return;
+  }
+
+  if (code) {
+    // Coming back from TikTok. The verifier and state were kept in this tab's
+    // sessionStorage, which is why the grant cannot be resumed in a new tab.
+    var savedState = sessionStorage.getItem('ru_state');
+    var savedVerifier = sessionStorage.getItem('ru_verifier');
+    sessionStorage.removeItem('ru_state');
+    sessionStorage.removeItem('ru_verifier');
+
+    if (!savedVerifier || (savedState && state && savedState !== state)) {
+      document.getElementById('step1').style.display = 'none';
+      document.getElementById('stepErr').style.display = 'block';
+      document.getElementById('errmsg').textContent =
+        !savedVerifier
+          ? 'This tab does not hold the code verifier for that sign-in. Start again in a single tab and do not reload before copying the values.'
+          : 'The state value did not match. Start again.';
+      return;
+    }
+
+    document.getElementById('step1').style.display = 'none';
+    document.getElementById('step2').style.display = 'block';
+    document.getElementById('code').value = decodeURIComponent(code);
+    document.getElementById('verifier').value = savedVerifier;
+    return;
+  }
+
+  document.getElementById('go').addEventListener('click', function (e) {
+    e.preventDefault();
+    var verifier = randomVerifier();
+    var st = randomVerifier().slice(0, 32);
+    sessionStorage.setItem('ru_verifier', verifier);
+    sessionStorage.setItem('ru_state', st);
+    sha256Hex(verifier).then(function (challenge) {
+      var q = new URLSearchParams({
+        client_key: key,
+        response_type: 'code',
+        scope: SCOPE,
+        redirect_uri: REDIRECT,
+        state: st,
+        code_challenge: challenge,
+        code_challenge_method: 'S256'
+      });
+      location.href = AUTHORIZE + '?' + q.toString();
+    });
   });
-}
+
+  document.querySelectorAll('[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var el = document.getElementById(btn.getAttribute('data-copy'));
+      el.select();
+      navigator.clipboard.writeText(el.value).then(function () {
+        var was = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(function () { btn.textContent = was; }, 1500);
+      }).catch(function () { document.execCommand('copy'); });
+    });
+  });
+})();
 </script>
 </body>
 </html>
